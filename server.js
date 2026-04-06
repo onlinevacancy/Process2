@@ -1,22 +1,39 @@
+// index.js
+
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
+const fs = require("fs");
+
+// Create uploads folder if it doesn't exist
+const uploadPath = "./uploads";
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath);
+}
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// file upload setup
-const upload = multer({ dest: "uploads/" });
+// Multer setup - only allow image uploads
+const upload = multer({
+  dest: uploadPath,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only images are allowed!"), false);
+    }
+  }
+});
 
-// simple memory database
+// Simple memory database
 let users = {
   1: { balance: 0 }
 };
-
 let payments = [];
 
-// ✅ TEST ROUTE (VERY IMPORTANT)
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
@@ -25,7 +42,7 @@ app.get("/", (req, res) => {
 app.get("/api/getUpi", (req, res) => {
   res.json({
     status: true,
-    upiId: "headoffice9@ybl",   // 👈 CHANGE THIS
+    upiId: "headoffice9@ybl",   // 👈 CHANGE THIS IF NEEDED
     qrCode: "https://via.placeholder.com/200",
     qrCodeId: "QR123"
   });
@@ -61,7 +78,7 @@ app.get("/api/balance", (req, res) => {
   });
 });
 
-// start server
+// Start server
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
